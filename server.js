@@ -5,13 +5,20 @@ import fs from "fs";
 
 const app = express();
 app.use(cors({
-  origin: [
-    "https://bndlabs.netlify.app",
-    "http://localhost:3000"
-  ],
+  origin: ["https://bndlabs.netlify.app", "http://localhost:3000"],
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
+  allowedHeaders: ["Content-Type"],
+  credentials: true
 }));
+
+// Extra: manually ensure all routes send the header
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://bndlabs.netlify.app");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+
 app.use(express.json());
 
 // === ROUTES (READ) ===
