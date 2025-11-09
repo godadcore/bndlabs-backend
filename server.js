@@ -1,3 +1,4 @@
+console.log("✅ Data directory absolute path:", path.join(process.cwd(), "data"));
 import express from "express";
 import cors from "cors";
 import fs from "fs";
