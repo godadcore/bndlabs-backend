@@ -4,7 +4,14 @@ import cors from "cors";
 import fs from "fs";
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://bndlabs.netlify.app",
+    "http://localhost:3000"
+  ],
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"]
+}));
 app.use(express.json());
 
 // === ROUTES (READ) ===
