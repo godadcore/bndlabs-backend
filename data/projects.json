@@ -1,0 +1,29 @@
+[
+  {
+    "id": "1",
+    "title": "Monitor Dashboard",
+    "tag": "Web App",
+    "hero": "images/project1.jpg"
+  },
+  {
+    "id": "2",
+    "title": "Analytics Suite",
+    "tag": "UI Design",
+    "hero": "images/project2.jpg"
+  },
+  {
+    "id": "3",
+    "title": "Marketing Landing Page",
+    "tag": "Web Design",
+    "hero": "images/project3.jpg"
+  },
+  {
+    "id": "4",
+    "title": "New App Design",
+    "tag": "Web App",
+    "hero": "https://your-image-url.jpg",
+    "link": "https://bndlabs.netlify.app/portfolio-details.html?id=4",
+    "updated": 1731100000000,
+    "status": "active"
+  }
+]
