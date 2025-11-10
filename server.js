@@ -15,8 +15,9 @@ const dataDir = path.join(__dirname, "data");
 // ====== CORS ======
 app.use(cors({
   origin: [
-    "https://bndlabs.netlify.app",
-    "http://localhost:3000"
+    "https://bndlabs-frontend.onrender.com",  // ✅ your live frontend
+    "https://bndlabs.netlify.app",            // optional old site
+    "http://localhost:3000"                   // local testing
   ],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
