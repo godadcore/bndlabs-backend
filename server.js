@@ -175,22 +175,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-
-// ====== EMAIL NOTIFICATION (CONTACT FORM) ======
-import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-dotenv.config();
-
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  }
-});
-
 app.post("/api/send-message", async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message)
