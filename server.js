@@ -23,12 +23,15 @@ console.log("✅ Data directory absolute path:", dataDir);
 // ====== CORS CONFIG (FIXED) ======
 app.use(
   cors({
-    origin: [
-      "https://bndlabs-frontend.onrender.com", // your live frontend
-      "https://bndlabs.netlify.app", // optional old site
-      "http://localhost:3000", // for local testing
-      "http://localhost:5500" // for VS Code Live Server (optional)
-    ],
+origin: [
+  "https://bndlabs-frontend.onrender.com",
+  "https://bndlabs.netlify.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500"
+],
+
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
     credentials: true
@@ -69,6 +72,10 @@ app.get("/api/profile", (req, res) => res.json(readJSON("profile.json", {})));
 app.get("/api/about", (req, res) => res.json(readJSON("about.json", {})));
 app.get("/api/contact", (req, res) => res.json(readJSON("contact.json", {})));
 app.get("/api/404", (req, res) => res.json(readJSON("404.json", {})));
+// ====== MESSAGES ROUTE (READ) ======
+app.get("/api/messages", (req, res) => {
+  res.json(readJSON("messages.json", []));
+});
 
 // ====== SOCIALS ROUTE ======
 app.get("/api/socials", (req, res) => {
@@ -101,6 +108,154 @@ app.post("/api/about", (req, res) => { writeJSON("about.json", req.body); res.js
 app.post("/api/contact", (req, res) => { writeJSON("contact.json", req.body); res.json({ ok: true }); });
 app.post("/api/404", (req, res) => { writeJSON("404.json", req.body); res.json({ ok: true }); });
 app.post("/api/socials", (req, res) => { writeJSON("socials.json", req.body); res.json({ ok: true }); });
+// ====== MESSAGES ROUTE (WRITE) ======
+app.post("/api/messages", (req, res) => {
+  const list = readJSON("messages.json", []);
+  list.push(req.body);
+  writeJSON("messages.json", list);
+  res.json({ ok: true });
+});
+// ========== MARK MESSAGE AS READ ==========
+app.post("/api/messages/mark-read", (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: "Missing message ID" });
+
+  const list = readJSON("messages.json", []);
+  const index = list.findIndex(m => m.id == id);
+
+  if (index === -1) return res.status(404).json({ error: "Message not found" });
+
+  list[index].read = true;
+  writeJSON("messages.json", list);
+
+  res.json({ ok: true, message: "Message marked as read" });
+});
+
+// ========== DELETE MESSAGE ==========
+app.post("/api/messages/delete", (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: "Missing message ID" });
+
+  let list = readJSON("messages.json", []);
+  list = list.filter(m => m.id != id);
+  writeJSON("messages.json", list);
+
+  res.json({ ok: true, message: "Message deleted" });
+});
+
+// ========== PAGINATED MESSAGES ==========
+app.get("/api/messages/paginated", (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  const list = readJSON("messages.json", []);
+  const start = (page - 1) * limit;
+  const end = start + limit;
+
+  res.json({
+    page,
+    limit,
+    total: list.length,
+    messages: list.slice(start, end)
+  });
+});
+
+// ====== EMAIL NOTIFICATION (CONTACT FORM) ======
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
+
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  }
+});
+
+
+// ====== EMAIL NOTIFICATION (CONTACT FORM) ======
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
+
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  }
+});
+
+app.post("/api/send-message", async (req, res) => {
+  const { name, email, message } = req.body;
+  if (!name || !email || !message)
+    return res.status(400).json({ error: "Missing required fields" });
+
+  try {
+
+    // ====== LOAD EMAIL TEMPLATES ======
+    const adminTemplate = fs.readFileSync(
+      path.join(__dirname, "email-templates", "admin-email.html"),
+      "utf8"
+    );
+
+    const visitorTemplate = fs.readFileSync(
+      path.join(__dirname, "email-templates", "visitor-email.html"),
+      "utf8"
+    );
+
+    // ====== APPLY VARIABLES ======
+    const adminHTML = adminTemplate
+      .replace(/{{name}}/g, name)
+      .replace(/{{email}}/g, email)
+      .replace(/{{message}}/g, message);
+
+    const visitorHTML = visitorTemplate
+      .replace(/{{name}}/g, name)
+      .replace(/{{email}}/g, email)
+      .replace(/{{message}}/g, message);
+
+    // ====== SEND TO ADMIN ======
+    await transporter.sendMail({
+      from: `"bndlabs" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: `New message from ${name}`,
+      html: adminHTML
+    });
+
+    // ====== SEND TO VISITOR ======
+    await transporter.sendMail({
+      from: `"bndlabs" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: `Your message was received by bndlabs`,
+      html: visitorHTML
+    });
+
+    // ====== SAVE MESSAGE ======
+    const list = readJSON("messages.json", []);
+    list.push({
+      id: Date.now(),
+      name,
+      email,
+      message,
+      date: new Date().toISOString(),
+      read: false
+    });
+    writeJSON("messages.json", list);
+
+    res.json({ ok: true, message: "Emails sent successfully" });
+
+  } catch (err) {
+    console.error("❌ Mail error:", err);
+    res.status(500).json({ error: "Failed to send email" });
+  }
+});
+
 
 // ====== START SERVER ======
 const PORT = process.env.PORT || 3000;
