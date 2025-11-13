@@ -4,7 +4,6 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -65,63 +64,89 @@ app.post("/api/messages", (req, res) => {
   writeJSON("messages.json", list);
   res.json({ ok: true });
 });
-
-// ====== Email Handler ======
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  }
-});
+// ====== BREVO API EMAIL SENDER ======
+import fetch from "node-fetch";
 
 app.post("/api/send-message", async (req, res) => {
   const { name, email, message } = req.body;
 
-  if (!name || !email || !message)
+  if (!name || !email || !message) {
     return res.status(400).json({ error: "Missing required fields" });
+  }
 
   try {
+    const apiKey = process.env.BREVO_API_KEY;
+
+    // Load templates
     const adminTemplate = fs.readFileSync(
       path.join(__dirname, "email-templates", "admin-email.html"),
       "utf8"
     );
-
     const visitorTemplate = fs.readFileSync(
       path.join(__dirname, "email-templates", "visitor-email.html"),
       "utf8"
     );
 
-    await transporter.sendMail({
-      from: `"bndlabs" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      subject: `New message from ${name}`,
-      html: adminTemplate
-        .replace(/{{name}}/g, name)
-        .replace(/{{email}}/g, email)
-        .replace(/{{message}}/g, message)
+    // Apply variables
+    const adminHTML = adminTemplate
+      .replace(/{{name}}/g, name)
+      .replace(/{{email}}/g, email)
+      .replace(/{{message}}/g, message);
+
+    const visitorHTML = visitorTemplate
+      .replace(/{{name}}/g, name)
+      .replace(/{{email}}/g, email)
+      .replace(/{{message}}/g, message);
+
+    // Send admin email
+    await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "bndlabs", email: process.env.EMAIL_USER },
+        to: [{ email: process.env.EMAIL_USER }],
+        subject: `New message from ${name}`,
+        htmlContent: adminHTML,
+      }),
     });
 
-    await transporter.sendMail({
-      from: `"bndlabs" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Your message was received by bndlabs",
-      html: visitorTemplate
-        .replace(/{{name}}/g, name)
-        .replace(/{{email}}/g, email)
-        .replace(/{{message}}/g, message)
+    // Send visitor email
+    await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "bndlabs", email: process.env.EMAIL_USER },
+        to: [{ email }],
+        subject: `Your message was received by bndlabs`,
+        htmlContent: visitorHTML,
+      }),
     });
+
+    // Save into messages.json
+    const list = readJSON("messages.json", []);
+    list.push({
+      id: Date.now(),
+      name,
+      email,
+      message,
+      date: new Date().toISOString(),
+      read: false,
+    });
+    writeJSON("messages.json", list);
 
     res.json({ ok: true });
 
-  } catch (error) {
-    console.error("MAIL ERROR:", error);
+  } catch (err) {
+    console.error("❌ Brevo API Error:", err);
     res.status(500).json({ error: "Failed to send email" });
   }
 });
-
 // ====== START SERVER ======
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
