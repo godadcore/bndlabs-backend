@@ -57,13 +57,34 @@ app.get("/api/404", (req, res) => res.json(readJSON("404.json", {})));
 app.get("/api/messages", (req, res) => res.json(readJSON("messages.json", [])));
 app.get("/api/socials", (req, res) => res.json(readJSON("socials.json", [])));
 
-// ====== Message Saving ======
+
+// ====== PAGINATED MESSAGES (ADMIN NEEDS THIS) ======
+app.get("/api/messages/paginated", (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+
+  const list = readJSON("messages.json", []);
+  const start = (page - 1) * limit;
+  const end = start + limit;
+
+  res.json({
+    page,
+    limit,
+    total: list.length,
+    messages: list.slice(start, end)
+  });
+});
+
+
+// ====== Message Saving (simple version) ======
 app.post("/api/messages", (req, res) => {
   const list = readJSON("messages.json", []);
   list.push(req.body);
   writeJSON("messages.json", list);
   res.json({ ok: true });
 });
+
+
 // ====== BREVO API EMAIL SENDER ======
 import fetch from "node-fetch";
 
@@ -147,6 +168,8 @@ app.post("/api/send-message", async (req, res) => {
     res.status(500).json({ error: "Failed to send email" });
   }
 });
+
+
 // ====== START SERVER ======
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));

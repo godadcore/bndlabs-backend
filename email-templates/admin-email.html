@@ -1,99 +1,86 @@
-<!-- ADMIN EMAIL — FUTURISTIC GLASSMORPHISM -->
-<div style="
-  width:100%;
-  background:#f4f4f4;
-  padding:40px 0;
-  font-family:Arial, sans-serif;
-  -webkit-font-smoothing:antialiased;
-">
-  
-  <!-- Header Glass Panel -->
-  <div style="
-    max-width:600px;
-    margin:auto;
-    background:linear-gradient(120deg,rgba(255,77,0,0.5),rgba(255,140,0,0.5));
-    backdrop-filter:blur(16px);
-    -webkit-backdrop-filter:blur(16px);
-    padding:40px 20px;
-    border-radius:24px 24px 0 0;
-    box-shadow:0 8px 40px rgba(255,77,0,0.28);
-    text-align:center;
-    color:#ffffff;
-  ">
-    <img src="https://bndlabs-frontend.onrender.com/assets/images/logo.svg"
-         style="width:90px;margin-bottom:14px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.2));">
+<!-- ADMIN EMAIL — SOLID ORANGE, EMAIL SAFE -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4; padding:40px 0; font-family:Arial, sans-serif;">
+  <tr>
+    <td align="center">
 
-    <h1 style="margin:0;font-size:26px;font-weight:700;letter-spacing:-0.5px;">
-      New Message Received
-    </h1>
-  </div>
+      <!-- HEADER (SOLID ORANGE) -->
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#FF4D00; border-radius:24px 24px 0 0; text-align:center; padding:40px 20px;">
+        <tr>
+          <td>
+            <img src="https://bndlabs-frontend.onrender.com/assets/images/logo.svg"
+                 width="90" alt="bndlabs logo"
+                 style="margin-bottom:14px;">
+            <h1 style="margin:0; font-size:26px; font-weight:700; color:#ffffff;">
+              New Message Received
+            </h1>
+          </td>
+        </tr>
+      </table>
 
-  <!-- Body Glass Card -->
-  <div style="
-    max-width:600px;
-    margin:auto;
-    background:rgba(255,255,255,0.75);
-    backdrop-filter:blur(12px);
-    -webkit-backdrop-filter:blur(12px);
-    padding:32px 28px;
-    border-radius:0 0 24px 24px;
-    box-shadow:0 10px 35px rgba(0,0,0,0.08);
-    border:1px solid rgba(255,255,255,0.5);
-  ">
+      <!-- BODY -->
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border:1px solid #eee; border-radius:0 0 24px 24px; padding:32px 28px;">
+        <tr>
+          <td>
 
-    <p style="font-size:15px;color:#333;margin-top:0;">
-      <strong style="color:#FF4D00;">From:</strong> {{name}} &lt;{{email}}&gt;
-    </p>
+            <!-- SENDER -->
+            <p style="font-size:15px; color:#333; margin-top:0; margin-bottom:16px;">
+              <strong style="color:#FF4D00;">From:</strong> {{name}} {{email}}
+            </p>
 
-    <p style="font-size:15px;color:#333;margin-top:26px;margin-bottom:10px;">
-      <strong style="color:#FF4D00;">Message:</strong>
-    </p>
+            <!-- MESSAGE LABEL -->
+            <p style="font-size:15px; color:#333; margin:0 0 10px 0;">
+              <strong style="color:#FF4D00;">Message:</strong>
+            </p>
 
-    <!-- Message Block -->
-    <div style="
-      background:rgba(255,255,255,0.6);
-      padding:18px 14px;
-      border-radius:16px;
-      border-left:5px solid #FF4D00;
-      color:#222;
-      font-size:15px;
-      line-height:1.6;
-      box-shadow:0 4px 16px rgba(0,0,0,0.05);
-    ">
-      {{message}}
-    </div>
+            <!-- MESSAGE BLOCK -->
+            <table width="100%" cellpadding="0" cellspacing="0" 
+              style="background:#fafafa; border-left:5px solid #FF4D00; border-radius:12px; padding:18px; font-size:15px; color:#222; line-height:1.6;">
+              <tr>
+                <td>
+                  {{message}}
+                </td>
+              </tr>
+            </table>
 
-    <!-- Buttons -->
-    <div style="text-align:center;margin-top:35px;">
-      <a href="mailto:{{email}}"
-        style="
-          padding:12px 26px;
-          background:linear-gradient(120deg,#FF4D00,#FF8C00);
-          border-radius:14px;
-          display:inline-block;
-          text-decoration:none;
-          font-weight:600;
-          color:#fff;
-          margin-right:10px;
-          box-shadow:0 6px 18px rgba(255,77,0,0.35);
-        ">Reply</a>
+            <!-- BUTTONS -->
+            <div style="text-align:center; margin-top:35px;">
+              <a href="mailto:{{email}}"
+                style="
+                  padding:12px 26px;
+                  background:#FF4D00;
+                  border-radius:14px;
+                  display:inline-block;
+                  text-decoration:none;
+                  font-weight:600;
+                  color:#ffffff;
+                  margin-right:10px;
+                ">
+                Reply
+              </a>
 
-      <a href="#"
-        style="
-          padding:12px 26px;
-          background:rgba(0,0,0,0.07);
-          border-radius:14px;
-          display:inline-block;
-          text-decoration:none;
-          font-weight:600;
-          color:#333;
-        ">Mark as Read</a>
-    </div>
+              <a href="#"
+                style="
+                  padding:12px 26px;
+                  background:#e6e6e6;
+                  border-radius:14px;
+                  display:inline-block;
+                  text-decoration:none;
+                  font-weight:600;
+                  color:#333333;
+                ">
+                Mark as Read
+              </a>
+            </div>
 
-    <p style="text-align:center;color:#777;font-size:12px;margin-top:38px;">
-      © 2025 bndlabs - All rights reserved.
-    </p>
+            <!-- FOOTER -->
+            <p style="text-align:center; color:#777; font-size:12px; margin-top:38px;">
+              © 2025 bndlabs  All rights reserved.
+            </p>
 
-  </div>
+          </td>
+        </tr>
+      </table>
 
-</div>
+    </td>
+  </tr>
+</table>
