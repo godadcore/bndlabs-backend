@@ -1,52 +1,80 @@
-<!-- VISITOR EMAIL — SOLID ORANGE, EMAIL-SAFE -->
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4; padding:40px 0; font-family:Arial, sans-serif;">
-  <tr>
-    <td align="center">
+<!-- VISITOR EMAIL (FULLY RESPONSIVE + FIXED LOGO) -->
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
 
-      <!-- HEADER (SOLID ORANGE) -->
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#FF4D00; border-radius:24px 24px 0 0; text-align:center; padding:40px 20px;">
-        <tr>
-          <td>
-            <img src="https://bndlabs-frontend.onrender.com/assets/images/logo.svg"
-                 width="90" alt="bndlabs logo"
-                 style="margin-bottom:14px;">
-            <h1 style="margin:0; font-size:26px; font-weight:700; color:#ffffff;">
-              Thanks for contacting bndlabs!
-            </h1>
-          </td>
-        </tr>
-      </table>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:40px 0;">
+    <tr>
+      <td align="center">
 
-      <!-- BODY -->
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border:1px solid #eee; border-radius:0 0 24px 24px; padding:32px 28px;">
-        <tr>
-          <td>
+        <!-- HEADER -->
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FF4D00;border-radius:24px 24px 0 0;color:#fff;text-align:center;">
+          <tr>
+            <td style="padding:40px 20px;">
 
-            <p style="font-size:16px; color:#222; margin:0 0 14px 0;">
+              <img src="https://bndlabs-frontend.onrender.com/assets/images/logo.png"
+                   alt="bndlabs logo"
+                   style="width:90px;display:block;margin:0 auto 14px;">
+
+              <h1 style="margin:0;font-size:26px;font-weight:700;">
+                Thanks for contacting bndlabs!
+              </h1>
+
+            </td>
+          </tr>
+        </table>
+
+        <!-- BODY -->
+        <table width="600" cellpadding="0" cellspacing="0" style="
+            max-width:600px;
+            background:#ffffff;
+            border-radius:0 0 24px 24px;
+            box-shadow:0 6px 30px rgba(0,0,0,0.08);
+            padding:32px 28px;
+          ">
+
+          <tr>
+            <td style="font-size:16px;color:#222;">
               Hi <strong style="color:#FF4D00;">{{name}}</strong>,
-            </p>
+            </td>
+          </tr>
 
-            <p style="font-size:15px; color:#333; margin:0 0 18px 0;">
-              We’ve received your message. A member of the team will get back to you shortly.
-            </p>
+          <tr><td style="height:12px;"></td></tr>
 
-            <!-- MESSAGE BLOCK -->
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafafa; border-left:5px solid #FF4D00; border-radius:12px; padding:18px; font-size:15px; color:#222; line-height:1.6;">
-              <tr>
-                <td>
-                  {{message}}
-                </td>
-              </tr>
-            </table>
+          <tr>
+            <td style="font-size:15px;color:#333;">
+              We’ve received your message. We will get back to you shortly.
+            </td>
+          </tr>
 
-            <p style="text-align:center; color:#777; font-size:12px; margin-top:38px;">
-              © 2025 bndlabs — We appreciate you.
-            </p>
+          <tr><td style="height:20px;"></td></tr>
 
-          </td>
-        </tr>
-      </table>
+          <!-- MESSAGE BOX -->
+          <tr>
+            <td>
+              <div style="
+                background:#fafafa;
+                padding:18px 14px;
+                border-left:5px solid #FF4D00;
+                border-radius:12px;
+                font-size:15px;
+                color:#222;
+              ">
+                {{message}}
+              </div>
+            </td>
+          </tr>
 
-    </td>
-  </tr>
-</table>
+          <tr><td style="height:35px;"></td></tr>
+
+          <tr>
+            <td align="center" style="font-size:12px;color:#999;">
+              © 2025 bndlabs - We appreciate you.
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>

@@ -5,26 +5,25 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 dotenv.config();
 
 const app = express();
 
-// ====== JSON BODY PARSER ======
+// ====== JSON PARSER ======
 app.use(express.json());
 
-// ====== OFFICIAL RENDER CORS FIX ======
+// ====== CORS FOR RENDER ======
 app.use(cors({
-  origin: [
-    "https://bndlabs-frontend.onrender.com",
-  ],
+  origin: ["https://bndlabs-frontend.onrender.com"],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
   credentials: true
 }));
 
-app.options("*", cors());  // REQUIRED FOR RENDER
+app.options("*", cors()); // Required
 
-// ====== Absolute path fix ======
+// ====== PATH FIX ======
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dataDir = path.join(__dirname, "data");
@@ -46,7 +45,7 @@ const writeJSON = (file, data) => {
   fs.writeFileSync(path.join(dataDir, file), JSON.stringify(data, null, 2));
 };
 
-// ====== Read Routes ======
+// ====== READ ROUTES ======
 app.get("/api/home", (req, res) => res.json(readJSON("home.json", {})));
 app.get("/api/projects", (req, res) => res.json(readJSON("projects.json", [])));
 app.get("/api/blogs", (req, res) => res.json(readJSON("blogs.json", [])));
@@ -54,11 +53,10 @@ app.get("/api/profile", (req, res) => res.json(readJSON("profile.json", {})));
 app.get("/api/about", (req, res) => res.json(readJSON("about.json", {})));
 app.get("/api/contact", (req, res) => res.json(readJSON("contact.json", {})));
 app.get("/api/404", (req, res) => res.json(readJSON("404.json", {})));
-app.get("/api/messages", (req, res) => res.json(readJSON("messages.json", [])));
 app.get("/api/socials", (req, res) => res.json(readJSON("socials.json", [])));
+app.get("/api/messages", (req, res) => res.json(readJSON("messages.json", [])));
 
-
-// ====== PAGINATED MESSAGES (ADMIN NEEDS THIS) ======
+// ====== PAGINATED MESSAGES ======
 app.get("/api/messages/paginated", (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -75,8 +73,7 @@ app.get("/api/messages/paginated", (req, res) => {
   });
 });
 
-
-// ====== Message Saving (simple version) ======
+// ====== SAVE MESSAGE ======
 app.post("/api/messages", (req, res) => {
   const list = readJSON("messages.json", []);
   list.push(req.body);
@@ -84,10 +81,40 @@ app.post("/api/messages", (req, res) => {
   res.json({ ok: true });
 });
 
+// ====== MARK MESSAGE READ ======
+app.post("/api/messages/mark-read", (req, res) => {
+  const { id } = req.body;
+
+  if (!id) return res.status(400).json({ error: "Missing ID" });
+
+  const list = readJSON("messages.json", []);
+  const index = list.findIndex(m => m.id == id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Message not found" });
+  }
+
+  list[index].read = true;
+  writeJSON("messages.json", list);
+
+  res.json({ ok: true });
+});
+
+// ====== DELETE MESSAGE ======
+app.post("/api/messages/delete", (req, res) => {
+  const { id } = req.body;
+
+  if (!id) return res.status(400).json({ error: "Missing ID" });
+
+  let list = readJSON("messages.json", []);
+  list = list.filter(m => m.id != id);
+
+  writeJSON("messages.json", list);
+
+  res.json({ ok: true });
+});
 
 // ====== BREVO API EMAIL SENDER ======
-import fetch from "node-fetch";
-
 app.post("/api/send-message", async (req, res) => {
   const { name, email, message } = req.body;
 
@@ -108,7 +135,7 @@ app.post("/api/send-message", async (req, res) => {
       "utf8"
     );
 
-    // Apply variables
+    // Generate HTML
     const adminHTML = adminTemplate
       .replace(/{{name}}/g, name)
       .replace(/{{email}}/g, email)
@@ -119,7 +146,7 @@ app.post("/api/send-message", async (req, res) => {
       .replace(/{{email}}/g, email)
       .replace(/{{message}}/g, message);
 
-    // Send admin email
+    // Send ADMIN email
     await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
@@ -134,7 +161,7 @@ app.post("/api/send-message", async (req, res) => {
       }),
     });
 
-    // Send visitor email
+    // Send VISITOR email
     await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
@@ -149,7 +176,7 @@ app.post("/api/send-message", async (req, res) => {
       }),
     });
 
-    // Save into messages.json
+    // Save message to database
     const list = readJSON("messages.json", []);
     list.push({
       id: Date.now(),
@@ -169,7 +196,8 @@ app.post("/api/send-message", async (req, res) => {
   }
 });
 
-
 // ====== START SERVER ======
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Backend running on port ${PORT}`)
+);
