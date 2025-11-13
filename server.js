@@ -1,6 +1,5 @@
 // ====== BNDLABS BACKEND SERVER ======
-import express from "express";
-import cors from "cors";
+import express from "express"
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -21,25 +20,20 @@ if (!fs.existsSync(dataDir)) {
 console.log("✅ Data directory absolute path:", dataDir);
 
 // ====== CORS CONFIG (FIXED) ======
-app.use(
-  cors({
-origin: [
-  "https://bndlabs-frontend.onrender.com",
-  "https://bndlabs.netlify.app",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:5500",
-  "http://127.0.0.1:5500"
-],
-
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
-    credentials: true
-  })
-);
-
 app.use(express.json());
+// ====== GLOBAL CORS FIX FOR RENDER ======
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://bndlabs-frontend.onrender.com");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Credentials", "true");
 
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 // ====== Helpers ======
 const readJSON = (file, fallback) => {
   try {
