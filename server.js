@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import { connectDB, getCollection } from "db-client.js";
+import { connectDB, getCollection } from "./db-client.js";
 dotenv.config();
 
 const app = express();
