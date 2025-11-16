@@ -14,15 +14,34 @@ const app = express();
 // ====== JSON BODY PARSER ======
 app.use(express.json({ limit: "1mb" }));
 
-// ====== CORS ======
-const FRONTEND = process.env.FRONTEND_ORIGIN || "https://bndlabs-frontend.onrender.com";
+// ====== CORS (Updated for getbndlabs.com) ======
+const allowedOrigins = [
+  "https://getbndlabs.com",
+  "https://www.getbndlabs.com",
+  "https://bndlabs-frontend.onrender.com",
+  "http://localhost:5173",
+  "http://localhost:3000"
+];
+
 app.use(cors({
-  origin: [FRONTEND, "http://localhost:5173", "http://localhost:3000"],
+  origin: function (origin, callback) {
+    // Allow tools like Postman (no origin)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      console.log("❌ Blocked by CORS:", origin);
+      return callback(new Error("CORS blocked"), false);
+    }
+  },
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
 app.options("*", cors());
+
 
 // ====== Absolute path fix ======
 const __filename = fileURLToPath(import.meta.url);
