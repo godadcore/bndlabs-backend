@@ -9,6 +9,15 @@ import { connectDB, getCollection } from "./db-client.js";
 import { login, authMiddleware } from "./auth.js"; // <- new
 dotenv.config();
 
+app.get("/__debug", (req, res) => {
+  res.json({
+    ok: true,
+    message: "Backend running",
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || "unknown"
+  });
+});
+
 const app = express();
 
 // ====== JSON BODY PARSER ======
