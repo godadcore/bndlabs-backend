@@ -201,75 +201,88 @@ app.post("/api/messages/delete", authMiddleware, async (req, res) => {
 // ====== SEND MESSAGE (Brevo) - public (visitor contact) ======
 app.post("/api/send-message", async (req, res) => {
   const { name, email, message } = req.body;
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
+  if (!name || !email || !message) return res.status(400).json({ error: "Missing required fields" });
 
   const BREVO_KEY = process.env.BREVO_API_KEY;
-  const FROM_EMAIL = process.env.EMAIL_FROM || "hello@getbndlabs.com";
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+  const FROM_EMAIL = process.env.EMAIL_FROM || process.env.EMAIL_USER || "no-reply@bndlabs.com";
+  const ADMIN_EMAIL = process.env.EMAIL_USER;
 
   if (!BREVO_KEY || !ADMIN_EMAIL) {
-    console.error("❌ Missing email environment variables");
+    console.error("❌ Missing BREVO_API_KEY or EMAIL_USER in environment");
     return res.status(500).json({ error: "Email service not configured" });
   }
 
-  // Save message to DB FIRST
-  const col = getCollection("messages");
-  const savedMsg = {
-    id: Date.now().toString(),
-    name,
-    email,
-    message,
-    date: new Date().toISOString(),
-    read: false
-  };
-  await col.insertOne(savedMsg);
-
-  // Email send helper
-  async function sendMail(payload) {
-    const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "api-key": BREVO_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!resp.ok) {
-      const t = await resp.text().catch(() => "");
-      throw new Error(`Brevo send error: ${resp.status} - ${t}`);
-    }
-  }
-
   try {
-    // Send email to admin
-    await sendMail({
+    let adminTemplate = `<div>New message from {{name}} &lt;{{email}}&gt;<br/>{{message}}</div>`;
+    let visitorTemplate = `<div>Hi {{name}},<br/>Bndlabs received your message: <br/>{{message}}</div>`;
+    const adminPath = path.join(__dirname, "email-templates", "admin-email.html");
+    const visitorPath = path.join(__dirname, "email-templates", "visitor-email.html");
+
+    if (fs.existsSync(adminPath)) adminTemplate = fs.readFileSync(adminPath, "utf8");
+    if (fs.existsSync(visitorPath)) visitorTemplate = fs.readFileSync(visitorPath, "utf8");
+
+    const adminHTML = adminTemplate.replace(/{{name}}/g, name).replace(/{{email}}/g, email).replace(/{{message}}/g, message);
+    const visitorHTML = visitorTemplate.replace(/{{name}}/g, name).replace(/{{email}}/g, email).replace(/{{message}}/g, message);
+
+    const send = async (payload) => {
+      const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": BREVO_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`Brevo status ${resp.status} - ${text}`);
+      }
+      return resp.json();
+    };
+
+    // Send admin
+    await send({
       sender: { name: "bndlabs", email: FROM_EMAIL },
       to: [{ email: ADMIN_EMAIL }],
       subject: `New message from ${name}`,
-      htmlContent: `<p><strong>Name:</strong> ${name}</p>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Message:</strong><br/>${message}</p>`
+      htmlContent: adminHTML
     });
 
-    // Send email to visitor
-    await sendMail({
+    // Send visitor
+    await send({
       sender: { name: "bndlabs", email: FROM_EMAIL },
       to: [{ email }],
-      subject: `Thanks - bndlabs got your message`,
-      htmlContent: `<p>Hi ${name},</p>
-                    <p>Thanks for reaching out. I received your message and will respond shortly.</p>
-                    <blockquote>${message}</blockquote>
-                    <p>– Bodunde<br/>bndlabs</p>`
+      subject: `Thanks - Bndlabs got your message`,
+      htmlContent: visitorHTML
     });
 
-    return res.json({ ok: true });
-  } catch (error) {
-    console.error("⚠ Email sending error:", error);
-    return res.status(500).json({
-      error: "Message saved but email sending failed"
-    });
+    // Save message in Mongo
+    const col = getCollection("messages");
+    const saved = {
+      id: Date.now().toString(),
+      name,
+      email,
+      message,
+      date: new Date().toISOString(),
+      read: false
+    };
+    await col.insertOne(saved);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ Brevo API Error:", err);
+    res.status(500).json({ error: "Failed to send email" });
   }
+});
+
+// ====== START SERVER ======
+const PORT = process.env.PORT || 3000;
+
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 BndLabs backend running at http://localhost:${PORT}`);
+  });
+}).catch(err => {
+  console.error("❌ Failed to connect to DB:", err);
+  process.exit(1);
 });
