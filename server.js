@@ -131,7 +131,7 @@ app.post("/api/socials", authMiddleware, async (req, res) => { await saveToDB("s
 // ====== MESSAGES (visitor submit remains public) ======
 
 // Public: submit message (visitor contact form) — remains public
-app.post("/api/messages", async (req, res) => {
+app.post("/api/send-message", async (req, res) => {
   const payload = {
     id: Date.now().toString(),
     name: req.body.name ?? "",
@@ -150,14 +150,14 @@ app.post("/api/messages", async (req, res) => {
 // ===== Admin: message listing & admin actions (PROTECTED) ======
 
 // Protected: list all messages (admin only)
-app.get("/api/messages", authMiddleware, async (req, res) => {
+app.get("/api/send-message", authMiddleware, async (req, res) => {
   const col = getCollection("messages");
   const messages = await col.find({}).sort({ date: -1 }).toArray();
   res.json(messages);
 });
 
 // Protected: paginated (admin only)
-app.get("/api/messages/paginated", authMiddleware, async (req, res) => {
+app.get("/api/send-message/paginated", authMiddleware, async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
 
@@ -175,7 +175,7 @@ app.get("/api/messages/paginated", authMiddleware, async (req, res) => {
 });
 
 // Protected: mark-read (admin only)
-app.post("/api/messages/mark-read", authMiddleware, async (req, res) => {
+app.post("/api/send-message/mark-read", authMiddleware, async (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: "Missing message ID" });
 
@@ -188,7 +188,7 @@ app.post("/api/messages/mark-read", authMiddleware, async (req, res) => {
 });
 
 // Protected: delete (admin only)
-app.post("/api/messages/delete", authMiddleware, async (req, res) => {
+app.post("/api/send-message/delete", authMiddleware, async (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: "Missing message ID" });
 
