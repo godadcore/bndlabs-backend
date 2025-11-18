@@ -161,17 +161,17 @@ app.post("/api/messages", async (req, res) => {
   res.json({ ok: true, item: payload });
 });
 
-// ===== Admin: message listing & admin actions (PROTECTED) ======
+// ===== Admin: message listing & admin actions (PUBLIC - NO LOGIN) ======
 
-// Protected: list all messages (admin only)
-app.get("/api/messages", authMiddleware, async (req, res) => {
+// List all messages (no auth)
+app.get("/api/messages", async (req, res) => {
   const col = getCollection("messages");
   const messages = await col.find({}).sort({ date: -1 }).toArray();
   res.json(messages);
 });
 
-// Protected: paginated (admin only)
-app.get("/api/messages/paginated", authMiddleware, async (req, res) => {
+// Paginated messages (no auth)
+app.get("/api/messages/paginated", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
 
@@ -188,21 +188,23 @@ app.get("/api/messages/paginated", authMiddleware, async (req, res) => {
   res.json({ page, limit, total, messages });
 });
 
-// Protected: mark-read (admin only)
-app.post("/api/messages/mark-read", authMiddleware, async (req, res) => {
+// Mark message as read (no auth)
+app.post("/api/messages/mark-read", async (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: "Missing message ID" });
 
   const col = getCollection("messages");
   const result = await col.updateOne({ id }, { $set: { read: true } });
 
-  if (result.matchedCount === 0) return res.status(404).json({ error: "Message not found" });
+  if (result.matchedCount === 0) {
+    return res.status(404).json({ error: "Message not found" });
+  }
 
   res.json({ ok: true });
 });
 
-// Protected: delete (admin only)
-app.post("/api/messages/delete", authMiddleware, async (req, res) => {
+// Delete message (no auth)
+app.post("/api/messages/delete", async (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: "Missing message ID" });
 
