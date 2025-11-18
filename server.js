@@ -205,7 +205,8 @@ app.post("/api/send-message", async (req, res) => {
 
   const BREVO_KEY = process.env.BREVO_API_KEY;
   const FROM_EMAIL = process.env.EMAIL_FROM || process.env.EMAIL_USER || "no-reply@bndlabs.com";
-  const ADMIN_EMAIL = process.env.EMAIL_USER;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+
 
   if (!BREVO_KEY || !ADMIN_EMAIL) {
     console.error("❌ Missing BREVO_API_KEY or EMAIL_USER in environment");
@@ -276,13 +277,18 @@ app.post("/api/send-message", async (req, res) => {
 });
 
 // ====== START SERVER ======
-const PORT = process.env.PORT || 3000;
+const PORT =
+  process.env.PORT ||
+  (process.env.NODE_ENV === "production" ? 5000 : 3000);
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 BndLabs backend running at http://localhost:${PORT}`);
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 BndLabs backend running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error("❌ Failed to connect to DB:", err);
+    process.exit(1);
   });
-}).catch(err => {
-  console.error("❌ Failed to connect to DB:", err);
-  process.exit(1);
-});
+
