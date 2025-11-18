@@ -198,62 +198,59 @@ app.post("/api/messages/delete", authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ====== SEND MESSAGE (Brevo) - public (visitor contact) ======
+// ====== SEND MESSAGE (Zoho SMTP) - public (visitor contact) ======
+import nodemailer from "nodemailer";
+
 app.post("/api/send-message", async (req, res) => {
   const { name, email, message } = req.body;
-  if (!name || !email || !message) return res.status(400).json({ error: "Missing required fields" });
-
-  const BREVO_KEY = process.env.BREVO_API_KEY;
-  const FROM_EMAIL = process.env.EMAIL_FROM || process.env.EMAIL_USER || "no-reply@bndlabs.com";
-  const ADMIN_EMAIL = process.env.EMAIL_USER;
-
-  if (!BREVO_KEY || !ADMIN_EMAIL) {
-    console.error("❌ Missing BREVO_API_KEY or EMAIL_USER in environment");
-    return res.status(500).json({ error: "Email service not configured" });
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
+  const FROM_EMAIL = process.env.EMAIL_USER;   // hello@getbndlabs.com
+  const ADMIN_EMAIL = process.env.EMAIL_USER;  // same for now
+
   try {
-    let adminTemplate = `<div>New message from {{name}} &lt;{{email}}&gt;<br/>{{message}}</div>`;
-    let visitorTemplate = `<div>Hi {{name}},<br/>Bndlabs received your message: <br/>{{message}}</div>`;
-    const adminPath = path.join(__dirname, "email-templates", "admin-email.html");
-    const visitorPath = path.join(__dirname, "email-templates", "visitor-email.html");
-
-    if (fs.existsSync(adminPath)) adminTemplate = fs.readFileSync(adminPath, "utf8");
-    if (fs.existsSync(visitorPath)) visitorTemplate = fs.readFileSync(visitorPath, "utf8");
-
-    const adminHTML = adminTemplate.replace(/{{name}}/g, name).replace(/{{email}}/g, email).replace(/{{message}}/g, message);
-    const visitorHTML = visitorTemplate.replace(/{{name}}/g, name).replace(/{{email}}/g, email).replace(/{{message}}/g, message);
-
-    const send = async (payload) => {
-      const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          "api-key": BREVO_KEY,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => "");
-        throw new Error(`Brevo status ${resp.status} - ${text}`);
-      }
-      return resp.json();
-    };
-
-    // Send admin
-    await send({
-      sender: { name: "bndlabs", email: FROM_EMAIL },
-      to: [{ email: ADMIN_EMAIL }],
-      subject: `New message from ${name}`,
-      htmlContent: adminHTML
+    // Configure Zoho SMTP
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,   // smtp.zoho.com
+      port: process.env.EMAIL_PORT,   // 465
+      secure: true,                   // SSL required for port 465
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // App password
+      },
     });
 
-    // Send visitor
-    await send({
-      sender: { name: "bndlabs", email: FROM_EMAIL },
-      to: [{ email }],
-      subject: `Thanks - Bndlabs got your message`,
-      htmlContent: visitorHTML
+    // Email to Admin
+    await transporter.sendMail({
+      from: `"bndlabs" <${FROM_EMAIL}>`,
+      to: ADMIN_EMAIL,
+      subject: `New message from ${name}`,
+      html: `
+        <div>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Message:</strong><br/>${message}</p>
+          <small>Sent via bndlabs.com</small>
+        </div>
+      `,
+    });
+
+    // Email to Visitor
+    await transporter.sendMail({
+      from: `"bndlabs" <${FROM_EMAIL}>`,
+      to: email,
+      subject: `Thanks for reaching out`,
+      html: `
+        <div>
+          <p>Hi ${name},</p>
+          <p>Thanks for contacting <b>bndlabs</b>. I’ve received your message:</p>
+          <blockquote>${message}</blockquote>
+          <p>I’ll reply as soon as possible.</p>
+          <small>— © 2025 bndlabs<br/>https://getbndlabs.com</small>
+        </div>
+      `,
     });
 
     // Save message in Mongo
@@ -270,10 +267,11 @@ app.post("/api/send-message", async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error("❌ Brevo API Error:", err);
+    console.error("❌ Zoho SMTP Error:", err);
     res.status(500).json({ error: "Failed to send email" });
   }
 });
+
 
 // ====== START SERVER ======
 const PORT = process.env.PORT || 3000;
