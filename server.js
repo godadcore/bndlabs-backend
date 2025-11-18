@@ -6,9 +6,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { connectDB, getCollection } from "./db-client.js";
-import { login, authMiddleware } from "./auth.js"; // <- new
+import { login, authMiddleware } from "./auth.js";
+
 dotenv.config();
 
+// Create Express app **BEFORE defining any routes**
+const app = express();
+
+// 👉 Debug route MUST be placed immediately AFTER express app creation
 app.get("/__debug", (req, res) => {
   res.json({
     ok: true,
@@ -18,10 +23,10 @@ app.get("/__debug", (req, res) => {
   });
 });
 
-const app = express();
-
 // ====== JSON BODY PARSER ======
 app.use(express.json({ limit: "1mb" }));
+
+// (Continue with remaining middleware and routes…)
 
 // ====== CORS (Updated for getbndlabs.com) ======
 const allowedOrigins = [
