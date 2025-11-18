@@ -214,7 +214,7 @@ app.post("/api/send-message", async (req, res) => {
 
   try {
     let adminTemplate = `<div>New message from {{name}} &lt;{{email}}&gt;<br/>{{message}}</div>`;
-    let visitorTemplate = `<div>Hi {{name}},<br/>We received your message: <br/>{{message}}</div>`;
+    let visitorTemplate = `<div>Hi {{name}},<br/>Bndlabs received your message: <br/>{{message}}</div>`;
     const adminPath = path.join(__dirname, "email-templates", "admin-email.html");
     const visitorPath = path.join(__dirname, "email-templates", "visitor-email.html");
 
@@ -252,7 +252,7 @@ app.post("/api/send-message", async (req, res) => {
     await send({
       sender: { name: "bndlabs", email: FROM_EMAIL },
       to: [{ email }],
-      subject: `Thanks — we got your message`,
+      subject: `Thanks - Bndlabs got your message`,
       htmlContent: visitorHTML
     });
 
